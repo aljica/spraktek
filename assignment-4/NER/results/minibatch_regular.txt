@@ -1,0 +1,20 @@
+0.0185735040577
+iterations
+5700
+0.0185724197987
+iterations
+5750
+Model training took 4759.75s
+Model parameters:
+0: -3.5493  1: 5.7489  2: -2.9652
+                       Real class
+                        0        1
+Predicted class:  0 83831.000 3242.000
+                  1  879.000 12046.000
+
+Accuracy: (TP + TN) / (TP + TN + FP + FN) =
+(83831 + 12046) / (83831 + 12046 + 879 + 3242) = 0.958789176
+
+Precision: TP / (TP + FP) = 83831 / (83831 + 3242) = 0.962766874
+
+Recall: TP / (TP + FN) = 0.989623421

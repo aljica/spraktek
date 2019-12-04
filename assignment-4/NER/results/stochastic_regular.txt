@@ -1,0 +1,13 @@
+0.0186475478311
+total iterations
+447000
+0.0187087450685
+total iterations
+448000
+Model training took 457.32s
+Model parameters:
+0: -3.6469  1: 6.5223  2: -3.4413
+                       Real class
+                        0        1
+Predicted class:  0 83831.000 3242.000
+                  1  879.000 12046.000

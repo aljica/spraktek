@@ -1,0 +1,22 @@
+0.0185466135721
+iterations
+9300
+0.0185465696397
+iterations
+9350
+gradient difference smaller than tolerance, exiting at iteration 9362
+Model training took 19822.86s
+Model parameters:
+0: -3.5842  1: 5.9438  2: -3.2151
+                       Real class
+                        0        1
+Predicted class:  0 83831.000 3242.000
+                  1  879.000 12046.000
+
+
+Accuracy: (TP + TN) / (TP + TN + FP + FN) =
+(83831 + 12046) / (83831 + 12046 + 879 + 3242) = 0.958789176
+
+Precision: TP / (TP + FP) = 83831 / (83831 + 3242) = 0.962766874
+
+Recall: TP / (TP + FN) = 0.989623421

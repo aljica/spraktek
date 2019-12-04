@@ -1,0 +1,18 @@
+iterations
+9300
+0.161247454433
+0.0161249269577
+iterations
+9350
+0.161245231451
+0.016124143804
+iterations
+9400
+gradient difference smaller than tolerance, exiting at iteration 9425
+Model training took 130.54s
+Model parameters:
+0: -3.5225  1: 6.2388  2: -3.4450
+                       Real class
+                        0        1
+Predicted class:  0 2579.000   67.000
+                  1   25.000  318.000

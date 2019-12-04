@@ -1,0 +1,35 @@
+3.B.
+
+Austen model on Austen test corpus
+python3 BigramTester.py -f austen_model.txt -t data/austen_test.txt
+Read 13161 words. Estimated entropy: 5.72
+
+Austen model on Guardian test corpus
+python3 BigramTester.py -f austen_model.txt -t data/guardian_test.txt
+Read 871837 words. Estimated entropy: 9.75
+
+Guardian model on Austen test corpus
+python3 BigramTester.py -f guardian_model.txt -t data/austen_test.txt
+Read 13161 words. Estimated entropy: 6.40
+
+Guardian model on Guardian test corpus
+python3 BigramTester.py -f guardian_model.txt -t data/guardian_test.txt
+Read 871837 words. Estimated entropy: 6.62
+
+Austen model is a relatively small data set (when compared to Guardian model).
+With that said, we see a noticable spike in cross-entropy when comparing
+the Austen model with the Austen test and the Guardian test corpuses
+respectively. However, the Guardian model is much larger, and the difference
+in using that model for either the Guardian test or the Austen test
+turns out to be roughly the same - in fact, the Austen test ends up
+having *lower* entropy and thus a higher level of general predictability!
+(I guess perhaps you could say small data set => high variance in predictability
+AND
+large data set => low variance in predictability?)
+
+I think that, based on our data above, we can theorize that, given a large
+enough data set, we can create a language model so vastly applicable that we
+need not care about the genre or audience of the test corpus (?).
+
+Then again, maybe it just means that Guardian_model just happens to 
+predict Austen_test fairly well.
