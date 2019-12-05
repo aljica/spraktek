@@ -194,9 +194,12 @@ class WordPredictor:
         words = []
         counts = []
         for w in self.index:
-            if user_input in w:
-                words.append(w)
-                counts.append(self.unigram_count[w])
+            if len(user_input) <= len(w):
+                test_word = w[0:len(user_input)]
+                if user_input == test_word:
+                    words.append(w)
+                    counts.append(self.unigram_count[w])
+
         if len(words) == 0 and len(counts) == 0:
             return []
 
