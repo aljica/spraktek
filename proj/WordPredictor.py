@@ -41,7 +41,7 @@ class WordPredictor:
         self.words = []
 
         # Number of words to recommend to the user.
-        self.num_words_to_recommend = 3
+        self.num_words_to_recommend = 4
 
 
     def read_model(self,filename):
@@ -240,7 +240,7 @@ class WordPredictor:
                 words_to_recommend.append(word)
 
         if len(words_to_recommend) >= self.num_words_to_recommend:
-            return words_to_recommend[0:3]
+            return words_to_recommend[0:self.num_words_to_recommend]
 
         return words_to_recommend
 
