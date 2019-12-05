@@ -34,7 +34,6 @@ class TrigramTrainer(object):
             nltk.download('punkt')
             self.tokens = nltk.word_tokenize(text)
         for token in self.tokens:
-            print("token", token)
             self.process_token(token)
 
 
