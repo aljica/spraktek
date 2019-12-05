@@ -26,13 +26,15 @@ class TrigramTrainer(object):
         Processes the file @code{f}.
         """
         with codecs.open(f, 'r', 'utf-8') as text_file:
-            text = reader = str(text_file.read()).lower() # lower() means no capitalization.
+            #text = reader = str(text_file.read()).lower() # lower() means no capitalization.
+            text = reader = str(text_file.read()) # Maintaining capitalization.
         try :
             self.tokens = nltk.word_tokenize(text) # Important that it is named self.tokens for the --check flag to work
         except LookupError :
             nltk.download('punkt')
             self.tokens = nltk.word_tokenize(text)
         for token in self.tokens:
+            print("token", token)
             self.process_token(token)
 
 

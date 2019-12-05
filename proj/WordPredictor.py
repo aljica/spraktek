@@ -42,7 +42,7 @@ class WordPredictor:
         self.words = []
 
         # Number of words to recommend to the user.
-        self.num_words_to_recommend = 3
+        self.num_words_to_recommend = 4
 
 
     def read_model(self,filename):
@@ -85,7 +85,6 @@ class WordPredictor:
         Prints the console.
         """
         print("\n")
-        print(words)
         all_words = ""
         for word in words:
             all_words += word + " "
@@ -282,7 +281,7 @@ class WordPredictor:
 
 
     def type(self):
-        #print(self.known(self.edits2('thereofre')))
+        #print(self.known(self.edits2('thereofr')))
 
         letter = ""
         new_word = ""
