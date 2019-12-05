@@ -1,6 +1,7 @@
 import argparse
 import codecs
 from collections import defaultdict
+from operator import itemgetter
 
 """
 This file is part of the computer assignments for the course DD1418/DD2418 Language engineering at KTH.
@@ -41,7 +42,7 @@ class WordPredictor:
         self.words = []
 
         # Number of words to recommend to the user.
-        self.num_words_to_recommend = 4
+        self.num_words_to_recommend = 3
 
 
     def read_model(self,filename):
@@ -245,7 +246,44 @@ class WordPredictor:
         return words_to_recommend
 
 
+    def edits1(self, word):
+        """
+        All edits that are one edit away from the given word.
+        """
+        letters = 'abcdefghijklmnopqrstuvwxyz'
+        splits = [(word[:i], word[i:])    for i in range(len(word) + 1)]
+        deletes = [L + R[1:]               for L, R in splits if R]
+        transposes = [L + R[1] + R[0] + R[2:] for L, R in splits if len(R)>1]
+        replaces = [L + c + R[1:]           for L, R in splits if R for c in letters]
+        inserts = [L + c + R               for L, R in splits for c in letters]
+        return set(deletes + transposes + replaces + inserts)
+
+    def edits2(self, word):
+        "All edits that are two edits away from the given word."
+        return (e2 for e1 in self.edits1(word) for e2 in self.edits1(e1))
+
+    def known(self, words):
+        "The permutations of one or two edits from the misspelled word that constitute real words, found in our vocabulary."
+        return set((w, self.unigram_count[w]) for w in words if w in self.index)
+
+    def spell_check(self, word):
+        possible_words = self.known(self.edits2(word))
+        if len(possible_words) == 0: return []
+        most_frequently_used_words = []
+
+        for i in range(self.num_words_to_recommend):
+            word = max(possible_words, key=itemgetter(1))[0] # See https://stackoverflow.com/questions/13145368/find-the-maximum-value-in-a-list-of-tuples-in-python
+            most_frequently_used_words.append(word)
+            possible_words.remove((word, self.unigram_count[word])) # So that we do not choose it again in the next iteration.
+            if len(possible_words) == 0:
+                break
+
+        return most_frequently_used_words
+
+
     def type(self):
+        #print(self.known(self.edits2('thereofre')))
+
         letter = ""
         new_word = ""
 
@@ -253,6 +291,10 @@ class WordPredictor:
 
             self.print_console(self.words, new_word)
             recommended_words = self.rec_words(new_word)
+
+            if len(recommended_words) == 0:
+                # If there are no recommended words, check if user has misspelled the word.
+                recommended_words = self.spell_check(new_word)
 
             for i in range(len(recommended_words)):
                 print(i+1, "-", recommended_words[i])
@@ -266,6 +308,7 @@ class WordPredictor:
                 number_of_word = possible_choices.index(letter)
                 chosen_word = recommended_words[number_of_word]
                 self.words.append(chosen_word)
+                self.unigram_count[chosen_word] += 1 # Update unigram count.
                 break
 
             # Handle cases for basic functionality.
@@ -287,7 +330,15 @@ class WordPredictor:
                 # Here we have to determine when to add a new word.
                 if new_word == "":
                     break
+
+                if new_word not in self.index:
+                    # If the word user typed does not exist in our vocabulary.
+                    self.index[new_word] = len(self.index)
+                    self.word[len(self.index)] = new_word
+                    self.unigram_count[new_word] = 1
+
                 self.words.append(new_word)
+                self.unigram_count[new_word] += 1 # Update unigram count (keeps track of how frequently user uses this word).
 
             new_word += letter
 
