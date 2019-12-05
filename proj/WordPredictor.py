@@ -9,9 +9,9 @@ Created 2018 by Johan Boye and Patrik Jonell.
 Modified December 2019 by Almir Aljic.
 """
 
-class Generator(object) :
+class WordPredictor:
     """
-    This class generates words from a language model.
+    This class predicts words using a language model.
     """
     def __init__(self):
 
@@ -65,14 +65,21 @@ class Generator(object) :
                     # Get index of first word and second word respectively, and their bigram prob
                     i, j, prob = map(str, line.strip().split(' '))
                     first_word, second_word = self.word[int(i)], self.word[int(j)]
-                    self.bigram_prob[int(i)][int(j)], self.bigram_prob[first_word][second_word] = float(prob), float(prob)
+                    self.bigram_prob[first_word][second_word] = float(prob)
                 # Read all trigram probabilities.
                 for line in f:
                     if line.strip() == "-1":
                         break
                     i, j, k, p = map(str, line.strip().split(' '))
                     first_word, second_word, third_word = self.word[int(i)], self.word[int(j)], self.word[int(k)]
-                    self.trigram_prob[int(i)][int(j)][int(k)], self.trigram_prob[first_word][second_word][third_word] = float(p), float(p)
+                    self.trigram_prob[first_word][second_word][third_word] = float(p)
+
+                x=list(self.trigram_prob["are"]["you"])
+                y=list(self.trigram_prob["are"]["you"].values())
+
+                print(x)
+                print(y)
+
                 return True
         except IOError:
             print("Couldn't find bigram probabilities file {}".format(filename))
@@ -95,29 +102,35 @@ class Generator(object) :
         Fetches all possible subsequent words that are found as part of
         a bigram from the language model.
         """
-        subsequent_words = {}
 
         if len(self.words) > 0:
             prev_word = self.words[len(self.words) - 1]
-            if self.bigram_prob[prev_word]:
-                subsequent_words = self.bigram_prob[prev_word]
+            w = self.bigram_prob.get(prev_word, "empty")
+            if w != "empty":
+                words = list(w)
+                p = list(w.values())
+                return words, p
 
-        return subsequent_words
+        return [], []
 
     def get_subsequent_trigram_words(self):
         """
         Fetches all possible subsequent words as part of a trigram, given by
         the language model.
         """
-        subsequent_words = {}
 
         if len(self.words) > 1:
             sub_two_word = self.words[len(self.words) - 2]
             prev_word = self.words[len(self.words) - 1]
-            if self.trigram_prob[sub_two_word][prev_word]:
-                subsequent_words = self.trigram_prob[sub_two_word][prev_word]
+            w = self.trigram_prob.get(sub_two_word, "empty")
+            if w != "empty":
+                w = w.get(prev_word, "empty")
+                if w != "empty":
+                    words = list(w)
+                    p = list(w.values())
+                    return words, p
 
-        return subsequent_words
+        return [], []
 
     def top_n_gram_words(self, user_input, n_gram):
         """
@@ -130,14 +143,11 @@ class Generator(object) :
         the constructor of this class.
         """
         if n_gram == 3:
-            subsequent_words = self.get_subsequent_trigram_words()
+            words, p = self.get_subsequent_trigram_words()
         elif n_gram == 2:
-            subsequent_words = self.get_subsequent_bigram_words()
+            words, p = self.get_subsequent_bigram_words()
         else:
             return []
-
-        words = list(subsequent_words)
-        p = list(subsequent_words.values())
 
         if len(words) == 0 and len(p) == 0:
             return []
@@ -147,13 +157,14 @@ class Generator(object) :
             p_user_input = []
             for i in range(len(words)):
                 word = words[i]
-                if user_input in word:
-                    words_user_input.append(word)
-                    p_user_input.append(p[i])
+                if len(user_input) <= len(word):
+                    test_word = word[0:len(user_input)]
+                    if user_input == test_word:
+                        words_user_input.append(word)
+                        p_user_input.append(p[i])
 
             words = words_user_input
             p = p_user_input
-
             if len(words) == 0 and len(p) == 0:
                 return []
 
@@ -223,20 +234,21 @@ class Generator(object) :
         bigrams = self.top_n_gram_words(user_input, 2)
         unigrams = self.top_unigram_words(user_input)
 
-
-        ## THIS PART OF COURSE HAS TO BE RE-DONE. NOW, IF IT HAPPENS THAT THE SAME WORDS ARE HIGHEST IN
-        ## BIGRAM AND TRIGRAM, THE SAME WORDS CAN BE RECOMMENDED IN RECOMMENDED_WORDS.
-        ## FIX THIS! COME UP WITH A BETTER SYSTEM.
         recommended_words += [trigrams[x] for x in range(len(trigrams))]
         recommended_words += [bigrams[x] for x in range(len(bigrams))]
         recommended_words += [unigrams[x] for x in range(len(unigrams))]
 
-        print("in rec_words", recommended_words)
+        words_to_recommend = []
+        for word in recommended_words:
+            if word in words_to_recommend:
+                continue
+            else:
+                words_to_recommend.append(word)
 
-        if len(recommended_words) >= self.num_words_to_recommend:
-            return recommended_words[0:3]
+        if len(words_to_recommend) >= self.num_words_to_recommend:
+            return words_to_recommend[0:3]
 
-        return recommended_words
+        return words_to_recommend
 
 
     def type(self):
@@ -247,49 +259,6 @@ class Generator(object) :
 
             self.print_console(self.words, new_word)
             recommended_words = self.rec_words(new_word)
-
-            ## UNCOMMENT THIS TO SEE PROBABILITIES AND HOW WORDS ARE CHOSEN TO BE RECOMMENDED
-            for word in recommended_words:
-                if len(self.words) == 0:
-                    print("recommended", word, "has unigram count", self.unigram_count[word])
-                    continue
-                elif len(self.words) == 1:
-                    w = self.words[len(self.words) - 1]
-                    try:
-                        p = self.bigram_prob[w][word]
-                        if p:
-                            print("recommended", word, "has bigram p", p)
-                            continue
-                        else:
-                            print("recomended", word, "has unigram count", self.unigram_count[word])
-                            continue
-                    except KeyError:
-                        print("recomended", word, "has unigram count", self.unigram_count[word])
-                        continue
-                elif len(self.words) > 1:
-                    w2 = self.words[len(self.words) - 2]
-                    w = self.words[len(self.words) - 1]
-                    if self.trigram_prob[w2][w][word]:
-                        p = self.trigram_prob[w2][w][word]
-                        print("recommended", word, "has trigram p", p)
-                        continue
-                    else:
-                        try:
-                            if self.trigram_prob[w2][w][word] == 0:
-                                print("recommended", word, "has trigram prob", self.trigram_prob[w2][w][word])
-                        except Error:
-                            pass
-                        try:
-                            p = self.bigram_prob[w][word]
-                            if p:
-                                print("recommended", word, "has bigram p", p)
-                                continue
-                            else:
-                                print("recommended", word, "has unigram count", self.unigram_count[word])
-                                continue
-                        except KeyError:
-                            print("recommended", word, "has unigram count", self.unigram_count[word])
-                            continue
 
             for i in range(len(recommended_words)):
                 print(i+1, "-", recommended_words[i])
@@ -340,11 +309,11 @@ def main():
 
     arguments = parser.parse_args()
 
-    generator = Generator()
-    generator.read_model(arguments.file)
+    word_predictor = WordPredictor()
+    word_predictor.read_model(arguments.file)
 
     while True:
-        if(generator.type()):
+        if(word_predictor.type()):
             print("\nEXITING!")
             break
 
