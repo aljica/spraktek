@@ -121,7 +121,7 @@ class Generator(object) :
 
     def top_n_gram_words(self, user_input, n_gram):
         """
-        Determines int(num_words_to_recommend) words that are most likely to appear after a given
+        Determines int(self.num_words_to_recommend) words that are most likely to appear after a given
         n-gram, depending on user input. All possible words that can follow
         the n-gram is given by subsequent_words, which are taken from
         self.trigram_prob or self.bigram_prob depending on the n-gram.
@@ -231,6 +231,8 @@ class Generator(object) :
         recommended_words += [bigrams[x] for x in range(len(bigrams))]
         recommended_words += [unigrams[x] for x in range(len(unigrams))]
 
+        print("in rec_words", recommended_words)
+
         if len(recommended_words) >= self.num_words_to_recommend:
             return recommended_words[0:3]
 
@@ -245,8 +247,6 @@ class Generator(object) :
 
             self.print_console(self.words, new_word)
             recommended_words = self.rec_words(new_word)
-
-            print(self.trigram_prob["once"]["upon"]["a"])
 
             ## UNCOMMENT THIS TO SEE PROBABILITIES AND HOW WORDS ARE CHOSEN TO BE RECOMMENDED
             for word in recommended_words:
