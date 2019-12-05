@@ -74,12 +74,6 @@ class WordPredictor:
                     first_word, second_word, third_word = self.word[int(i)], self.word[int(j)], self.word[int(k)]
                     self.trigram_prob[first_word][second_word][third_word] = float(p)
 
-                x=list(self.trigram_prob["are"]["you"])
-                y=list(self.trigram_prob["are"]["you"].values())
-
-                print(x)
-                print(y)
-
                 return True
         except IOError:
             print("Couldn't find bigram probabilities file {}".format(filename))
