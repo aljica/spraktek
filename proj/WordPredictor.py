@@ -42,7 +42,7 @@ class WordPredictor:
         self.words = []
 
         # Number of words to recommend to the user.
-        self.num_words_to_recommend = 4
+        self.num_words_to_recommend = 3
 
 
     def read_model(self,filename):
@@ -52,7 +52,6 @@ class WordPredictor:
         :param filename: The name of the language model file.
         :return: <code>true</code> if the entire file could be processed, false otherwise.
         """
-
         try:
             with codecs.open(filename, 'r', 'utf-8') as f:
                 self.unique_words, self.total_words = map(int, f.readline().strip().split(' '))
@@ -87,6 +86,10 @@ class WordPredictor:
         print("\n")
         all_words = ""
         for word in words:
+            if word in [".", ",", "!", "?"]:
+                all_words = all_words.strip() # Remove last whitespace.
+                all_words += word + " "
+                continue
             all_words += word + " "
         all_words += new_word + "_"
         print(all_words)
@@ -96,6 +99,17 @@ class WordPredictor:
         Fetches all possible subsequent words that are found as part of
         a bigram from the language model.
         """
+        # Special case scenario, if self.words equals 0. If we didn't have this special case handler,
+        # then we would get no bigram_words at all in recommended_words. Instead, we would just get the words
+        # that are most commonly used, as stand-alone (unigram) words, such as lower-case 'the', '.' etc.
+        # What we want is to get the most common start-of-sentence words, which is what this handler is for!
+        if len(self.words) == 0:
+            prev_word = "."
+            w = self.bigram_prob.get(prev_word, "empty")
+            if w != "empty":
+                words = list(w)
+                p = list(w.values())
+                return words, p
 
         if len(self.words) > 0:
             prev_word = self.words[len(self.words) - 1]
@@ -251,6 +265,7 @@ class WordPredictor:
     def edits1(self, word):
         """
         All edits that are one edit away from the given word.
+        Source: https://norvig.com/spell-correct.html
         """
         letters = 'abcdefghijklmnopqrstuvwxyz'
         splits = [(word[:i], word[i:])    for i in range(len(word) + 1)]
@@ -261,11 +276,17 @@ class WordPredictor:
         return set(deletes + transposes + replaces + inserts)
 
     def edits2(self, word):
-        "All edits that are two edits away from the given word."
+        """
+        All edits that are two edits away from the given word.
+        Source: https://norvig.com/spell-correct.html
+        """
         return (e2 for e1 in self.edits1(word) for e2 in self.edits1(e1))
 
     def known(self, words):
-        "The permutations of one or two edits from the misspelled word that constitute real words, found in our vocabulary."
+        """
+        The permutations of one or two edits from the misspelled word that constitute real words, found in our vocabulary.
+        Source: https://norvig.com/spell-correct.html
+        """
         return set((w, self.unigram_count[w]) for w in words if w in self.index)
 
     def spell_check(self, word):
