@@ -7,7 +7,7 @@ from operator import itemgetter
 This file is part of the computer assignments for the course DD1418/DD2418 Language engineering at KTH.
 Created 2018 by Johan Boye and Patrik Jonell.
 
-Modified December 2019 by Almir Aljic.
+Modified December 2019 by Almir Aljic & Alexander Jakobsen.
 """
 
 class WordPredictor:
@@ -305,8 +305,6 @@ class WordPredictor:
 
 
     def type(self):
-        #print(self.known(self.edits2('thereofr')))
-
         letter = ""
         new_word = ""
 

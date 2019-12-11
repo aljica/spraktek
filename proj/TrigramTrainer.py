@@ -11,7 +11,7 @@ import codecs
 This file is part of the computer assignments for the course DD1418/DD2418 Language engineering at KTH.
 Created 2017 by Johan Boye and Patrik Jonell.
 
-Modified by Almir Aljic in December 2019. Original version, named "BigramTrainer", has been extended and thus
+Modified by Almir Aljic & Alexander Jakobsen in December 2019. Original version, named "BigramTrainer", has been extended and thus
 re-named to "TrigramTrainer".
 """
 
