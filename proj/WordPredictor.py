@@ -315,7 +315,16 @@ class WordPredictor:
 
             if len(recommended_words) == 0:
                 # If there are no recommended words, check if user has misspelled the word.
-                recommended_words = self.spell_check(new_word)
+                # BUT, if there is a non-alphabetic character in new_word, then do NOT check spelling.
+                # This is because if the user has written "$1" and it doesn't exist in the vocabulary,
+                # then the system might end up recommending any two-letter word "to", "am", ... etc.
+                check_spell = True
+                for c in new_word:
+                    if not c.isalpha():
+                        check_spell = False
+                        break
+                if check_spell:
+                    recommended_words = self.spell_check(new_word)
 
             for i in range(len(recommended_words)):
                 print(i+1, "-", recommended_words[i])
