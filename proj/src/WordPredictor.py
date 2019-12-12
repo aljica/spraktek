@@ -41,7 +41,7 @@ class WordPredictor:
         # User-inputted words.
         self.words = []
 
-        # Number of words to recommend to the user.
+        # Number of words to recommend to the user. Keep this number reasonable, <10.
         self.num_words_to_recommend = 3
 
 
@@ -205,6 +205,9 @@ class WordPredictor:
         return recommended_words
 
     def top_unigram_words(self, user_input):
+        """
+        Determines int(self.num_words_to_recommend) words that have the highest frequency of occurrence.
+        """
         words = []
         counts = []
         for w in self.index:
@@ -290,6 +293,9 @@ class WordPredictor:
         return set((w, self.unigram_count[w]) for w in words if w in self.index)
 
     def spell_check(self, word):
+        """
+        Finds possible corrections of misspelled words.
+        """
         possible_words = self.known(self.edits2(word))
         if len(possible_words) == 0: return []
         most_frequently_used_words = []
@@ -305,6 +311,9 @@ class WordPredictor:
 
 
     def type(self):
+        """
+        Handles user inputs.
+        """
         letter = ""
         new_word = ""
 
