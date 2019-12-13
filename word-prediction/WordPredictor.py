@@ -441,12 +441,18 @@ class WordPredictor:
             print("File does not exist.")
             return
 
-        n = 0
+        print("Number of words/tokens in test file", len(self.tokens))
+        n = 0 # Number of analyzed tokens from test file thus far.
         for token in self.tokens:
-            n += 1
             if token == "" or token == " ":
                 # If somehow a token is just blank, skip it.
                 continue
+
+            n += 1
+            if n%1000 == 0:
+                print("\nStats generated on", n, "words from the test file")
+                print("Total keystrokes in test file thus far", self.total_keystrokes, "user had to type", self.user_keystrokes)
+                print("User had to make", 100 * self.user_keystrokes / self.total_keystrokes, "percent of the keystrokes.")
 
             self.total_keystrokes += len(token) + 1 # Add the number of keystrokes required to type out the word. Plus 1 for the space before the next token.
             user_input = ""
@@ -462,16 +468,13 @@ class WordPredictor:
 
                 if user_input == token:
                     self.user_keystrokes += 1 # Add 1 for the space user would have to add.
+                    self.words.append(token)
+                    break
 
                 recommended_words = self.rec_words(user_input)
                 if token in recommended_words:
                     self.words.append(token)
                     break
-
-            if n%100 == 0:
-                print("\nStats generated on", n, "words from the test file")
-                print("Total keystrokes in test file thus far", self.total_keystrokes, "user had to type", self.user_keystrokes)
-                print("User had to make", 100 * self.user_keystrokes / self.total_keystrokes, "percent of the keystrokes.")
 
         print("\nFinal information, based on entire test file:")
         print("Total words in test file", n, "- Total keystrokes in test file", self.total_keystrokes, "user had to type", self.user_keystrokes)

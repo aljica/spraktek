@@ -20,7 +20,7 @@ At the welcome screen, input either 'stats' or 'type'. Type 'quit' to quit.
 
 One of the options is 'stats'. Choosing the stats option prompts you to firstly
 input the path to a test file. The test file should contain, for instance,
-an article from a news paper. It might be that you just copy-pasted an article
+an article from a news website. It might be that you just copy-pasted an article
 from BBC into your test file. Make sure your test file is a .txt file!
 
 Stats will use the Word Predictor to type each word in your test file and
