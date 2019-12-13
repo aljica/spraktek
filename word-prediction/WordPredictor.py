@@ -458,6 +458,7 @@ class WordPredictor:
             user_input = ""
             recommended_words = self.rec_words(user_input)
             if token in recommended_words:
+                self.user_keystrokes += 1 # Add 1 keystroke as user selects the recommendation.
                 self.words.append(token)
                 continue
 
@@ -473,6 +474,7 @@ class WordPredictor:
 
                 recommended_words = self.rec_words(user_input)
                 if token in recommended_words:
+                    self.user_keystrokes += 1 # Add 1 keystroke as user selects the recommendation.
                     self.words.append(token)
                     break
 
