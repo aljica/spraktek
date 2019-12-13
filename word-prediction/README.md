@@ -19,6 +19,7 @@ python3 WordPredictor.py -f model.txt
 You may also specify a test file to run stats on by typing:
 
 python3 WordPredictor.py -f model.txt -tf your_test_file.txt
+
 If you subsequently choose to run stats in the welcome window,
 stats will automatically be run on your test file.
 Once again, the "-tf" option is optional and we do not recommend using it because
