@@ -3,6 +3,7 @@ import codecs
 from collections import defaultdict
 from operator import itemgetter
 import nltk
+import sys
 
 """
 This file is part of the computer assignments for the course DD1418/DD2418 Language engineering at KTH.
@@ -15,7 +16,7 @@ class WordPredictor:
     """
     This class predicts words using a language model.
     """
-    def __init__(self):
+    def __init__(self, filename, filepath = None):
 
         # The mapping from words to identifiers.
         self.index = {}
@@ -45,6 +46,42 @@ class WordPredictor:
         # Number of words to recommend to the user. Keep this number reasonable, <10.
         self.num_words_to_recommend = 3
 
+        if not self.read_model(filename):
+            # If unable to read model (file missing).
+            print("Unable to read model, was the filepath correctly specified?")
+            sys.exit()
+
+        self.welcome(filepath)
+
+    def welcome(self, filepath):
+        print("Welcome to the Word Prediction Program.")
+        user_input = ""
+        while user_input != "quit":
+            print("\nPlease enter 'stats' to check how many keystrokes you would save if you were to type out the contents of the testfile, if you added one.")
+            print("Please enter 'type' to type freely and see a list of recommended words with each keystroke you make.")
+            print("Enter 'quit' to quit.")
+            user_input = input("Your choice: ")
+            if user_input == "stats":
+                self.run_stats(filepath)
+                filepath = None
+            elif user_input == "type":
+                self.run_type()
+            else:
+                if user_input != "quit":
+                    print("\nPlease input 'stats' or 'type' (without the quotation marks).")
+
+    def run_type(self):
+        while True:
+            if (self.type()):
+                print("\nExiting type.")
+                break
+
+    def run_stats(self, filepath):
+        if filepath:
+            self.stats(filepath)
+        while filepath != "quit":
+            filepath = input("Input a filepath to a text file to run stats (or type quit): ")
+            self.stats(filepath)
 
     def read_model(self,filename):
         """
@@ -246,12 +283,13 @@ class WordPredictor:
         recommended_words = []
 
         trigrams = self.top_n_gram_words(user_input, 3) # Most probable words to appear in the context of the given trigram, given a user input.
-        bigrams = self.top_n_gram_words(user_input, 2)
-        unigrams = self.top_unigram_words(user_input)
-
         recommended_words += [trigrams[x] for x in range(len(trigrams))]
-        recommended_words += [bigrams[x] for x in range(len(bigrams))]
-        recommended_words += [unigrams[x] for x in range(len(unigrams))]
+        if len(recommended_words) < 3:
+            bigrams = self.top_n_gram_words(user_input, 2)
+            recommended_words += [bigrams[x] for x in range(len(bigrams))]
+            if len(recommended_words) < 3:
+                unigrams = self.top_unigram_words(user_input)
+                recommended_words += [unigrams[x] for x in range(len(unigrams))]
 
         words_to_recommend = []
         for word in recommended_words:
@@ -352,7 +390,7 @@ class WordPredictor:
                 break
 
             # Handle cases for basic functionality.
-            if letter == "quit-this":
+            if letter == "quit":
                 return True
 
             if letter == "re-":
@@ -429,9 +467,6 @@ class WordPredictor:
         except FileNotFoundError:
             print("File does not exist.")
 
-
-
-
 def main():
     """
     Parse command line arguments
@@ -442,19 +477,7 @@ def main():
 
     arguments = parser.parse_args()
 
-    word_predictor = WordPredictor()
-    word_predictor.read_model(arguments.file)
-
-    if (arguments.testfile):
-        filepath = arguments.testfile
-        while filepath != "exit":
-            word_predictor.stats(filepath)
-            filepath = input("Input a path to a file, or type 'exit' to quit: ")
-
-    while True:
-        if(word_predictor.type()):
-            print("\nEXITING!")
-            break
+    word_predictor = WordPredictor(arguments.file, arguments.testfile)
 
 if __name__ == "__main__":
     main()
