@@ -81,7 +81,7 @@ class WordPredictor:
         filepath = ""
         while filepath != "quit":
             filepath = input("\nInput a filepath to a text file to run stats (or type quit): ")
-            self.stats()
+            self.stats(filepath)
 
     def read_model(self,filename):
         """
@@ -423,7 +423,7 @@ class WordPredictor:
         return False
 
 
-    def stats(self):
+    def stats(self, filepath):
         """
         Determines number of saved keystrokes given an input file.
         """
