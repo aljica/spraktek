@@ -25,3 +25,5 @@ word, etc.
 
 To quit the program, input "quit" (without the quotation marks).
 The program will now announce that it is "EXITING".
+
+nltk.download('brown') is required for running the stats.

@@ -3,6 +3,7 @@ import codecs
 from collections import defaultdict
 from operator import itemgetter
 import nltk
+from nltk.corpus import brown as brown_corpus # See https://www.nltk.org/api/nltk.corpus.reader.html#id5 for more information.
 import sys
 
 """
@@ -57,7 +58,7 @@ class WordPredictor:
         print("Welcome to the Word Prediction Program.")
         user_input = ""
         while user_input != "quit":
-            print("\nPlease enter 'stats' to check how many keystrokes you would save if you were to type out the contents of the testfile, if you added one.")
+            print("\nPlease enter 'stats' to check how many keystrokes you would save if you were to type out the contents of the testfile (if you added one).")
             print("Please enter 'type' to type freely and see a list of recommended words with each keystroke you make.")
             print("Enter 'quit' to quit.")
             user_input = input("Your choice: ")
@@ -74,14 +75,19 @@ class WordPredictor:
         while True:
             if (self.type()):
                 print("\nExiting type.")
+                self.words = [] # Reset
                 break
 
     def run_stats(self, filepath):
         if filepath:
             self.stats(filepath)
         while filepath != "quit":
-            filepath = input("Input a filepath to a text file to run stats (or type quit): ")
-            self.stats(filepath)
+            use_brown_corpus = input("\nWould you like to run stats using the Brown Corpus? This takes a very long time. (yes/no): ")
+            if use_brown_corpus == "yes":
+                self.stats(filepath, True)
+            else:
+                filepath = input("\nInput a filepath to a text file to run stats (or type quit): ")
+                self.stats(filepath)
 
     def read_model(self,filename):
         """
@@ -423,49 +429,64 @@ class WordPredictor:
         return False
 
 
-    def stats(self, filepath):
+    def stats(self, filepath, use_brown_corpus = False):
         """
         Determines number of saved keystrokes given an input file.
         """
         self.total_keystrokes = 0 # Number of total keystrokes required for the entire file.
         self.user_keystrokes = 0 # Number of keystrokes user had to type.
         try:
-            with open(filepath, 'r') as f:
-                text = str(f.read())
-                try:
-                    self.tokens = nltk.word_tokenize(text)
-                except LookupError:
-                    nltk.download('punkt')
-                    self.tokens = nltk.word_tokenize(text)
-
-                print(self.tokens)
-                for token in self.tokens:
-                    self.total_keystrokes += len(token) + 1 # Add the number of keystrokes required to type out the word. Plus 1 for the space before the next token.
-                    user_input = ""
-                    recommended_words = self.rec_words(user_input)
-                    if token in recommended_words:
-                        self.words.append(token)
-                        continue
-
-                    # Now, for each letter that has to be typed:
-                    for letter in token:
-                        user_input += letter
-                        self.user_keystrokes += 1 # Increment number of keystrokes user has had to make.
-
-                        if user_input == token:
-                            self.user_keystrokes += 1 # Add 1 for the space user would have to add.
-
-                        recommended_words = self.rec_words(user_input)
-                        if token in recommended_words:
-                            self.words.append(token)
-                            break
-
-            print("Total keystrokes in text", self.total_keystrokes, "user had to type", self.user_keystrokes)
-            print("User had to type", 100 * self.user_keystrokes / self.total_keystrokes, "percent of the words.")
-            self.words = [] # Reset
-
+            if not use_brown_corpus:
+                with open(filepath, 'r') as f:
+                    text = str(f.read())
+                    try:
+                        self.tokens = nltk.word_tokenize(text)
+                    except LookupError:
+                        nltk.download('punkt')
+                        self.tokens = nltk.word_tokenize(text)
+            else:
+                self.tokens = [item for sublist in brown_corpus.sents() for item in sublist] # Tokens from brown corpus.
         except FileNotFoundError:
             print("File does not exist.")
+            return
+
+        n = 0
+        for token in self.tokens:
+            n += 1
+            if token == "" or token == " ":
+                # If somehow a token is just blank, skip it.
+                continue
+
+            self.total_keystrokes += len(token) + 1 # Add the number of keystrokes required to type out the word. Plus 1 for the space before the next token.
+            user_input = ""
+            recommended_words = self.rec_words(user_input)
+            if token in recommended_words:
+                self.words.append(token)
+                continue
+
+            # Now, for each letter that has to be typed:
+            for letter in token:
+                user_input += letter
+                self.user_keystrokes += 1 # Increment number of keystrokes user has had to make.
+
+                if user_input == token:
+                    self.user_keystrokes += 1 # Add 1 for the space user would have to add.
+
+                recommended_words = self.rec_words(user_input)
+                if token in recommended_words:
+                    self.words.append(token)
+                    break
+
+            if n%10000 == 0:
+                print("\nn equals", n)
+                print("Total keystrokes in text", self.total_keystrokes, "user had to type", self.user_keystrokes)
+                print("User had to make", 100 * self.user_keystrokes / self.total_keystrokes, "percent of the keystrokes.")
+
+        print("\nInformation:")
+        print("Total keystrokes in text", self.total_keystrokes, "user had to type", self.user_keystrokes)
+        print("User had to make", 100 * self.user_keystrokes / self.total_keystrokes, "percent of the keystrokes.")
+        self.words = [] # Reset
+
 
 def main():
     """
