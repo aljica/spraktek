@@ -3,7 +3,7 @@ import codecs
 from collections import defaultdict
 from operator import itemgetter
 import nltk
-from nltk.corpus import brown as brown_corpus # See https://www.nltk.org/api/nltk.corpus.reader.html#id5 for more information.
+#from nltk.corpus import brown as brown_corpus # See https://www.nltk.org/api/nltk.corpus.reader.html#id5 for more information.
 import sys
 
 """
@@ -17,7 +17,7 @@ class WordPredictor:
     """
     This class predicts words using a language model.
     """
-    def __init__(self, filename, filepath = None):
+    def __init__(self, filename):
 
         # The mapping from words to identifiers.
         self.index = {}
@@ -52,19 +52,18 @@ class WordPredictor:
             print("Unable to read model, was the filepath correctly specified?")
             sys.exit()
 
-        self.welcome(filepath)
+        self.welcome()
 
-    def welcome(self, filepath):
+    def welcome(self):
         print("Welcome to the Word Prediction Program.")
         user_input = ""
         while user_input != "quit":
-            print("\nPlease enter 'stats' to check how many keystrokes you would save if you were to type out the contents of the testfile (if you added one).")
+            print("\nPlease enter 'stats' to check how many keystrokes you would save if you were to type out the contents of a test file.")
             print("Please enter 'type' to type freely and see a list of recommended words with each keystroke you make.")
             print("Enter 'quit' to quit.")
             user_input = input("Your choice: ")
             if user_input == "stats":
-                self.run_stats(filepath)
-                filepath = None
+                self.run_stats()
             elif user_input == "type":
                 self.run_type()
             else:
@@ -78,16 +77,11 @@ class WordPredictor:
                 self.words = [] # Reset
                 break
 
-    def run_stats(self, filepath):
-        if filepath:
-            self.stats(filepath)
+    def run_stats(self):
+        filepath = ""
         while filepath != "quit":
-            use_brown_corpus = input("\nWould you like to run stats using the Brown Corpus? This takes a very long time. (yes/no): ")
-            if use_brown_corpus == "yes":
-                self.stats(filepath, True)
-            else:
-                filepath = input("\nInput a filepath to a text file to run stats (or type quit): ")
-                self.stats(filepath)
+            filepath = input("\nInput a filepath to a text file to run stats (or type quit): ")
+            self.stats()
 
     def read_model(self,filename):
         """
@@ -429,23 +423,20 @@ class WordPredictor:
         return False
 
 
-    def stats(self, filepath, use_brown_corpus = False):
+    def stats(self):
         """
         Determines number of saved keystrokes given an input file.
         """
         self.total_keystrokes = 0 # Number of total keystrokes required for the entire file.
         self.user_keystrokes = 0 # Number of keystrokes user had to type.
         try:
-            if not use_brown_corpus:
-                with open(filepath, 'r') as f:
-                    text = str(f.read())
-                    try:
-                        self.tokens = nltk.word_tokenize(text)
-                    except LookupError:
-                        nltk.download('punkt')
-                        self.tokens = nltk.word_tokenize(text)
-            else:
-                self.tokens = [item for sublist in brown_corpus.sents() for item in sublist] # Tokens from brown corpus.
+            with open(filepath, 'r') as f:
+                text = str(f.read())
+                try:
+                    self.tokens = nltk.word_tokenize(text)
+                except LookupError:
+                    nltk.download('punkt')
+                    self.tokens = nltk.word_tokenize(text)
         except FileNotFoundError:
             print("File does not exist.")
             return
@@ -477,13 +468,13 @@ class WordPredictor:
                     self.words.append(token)
                     break
 
-            if n%10000 == 0:
-                print("\nn equals", n)
-                print("Total keystrokes in text", self.total_keystrokes, "user had to type", self.user_keystrokes)
+            if n%100 == 0:
+                print("\nStats generated on", n, "number of words from the test file")
+                print("Total keystrokes in text thus far", self.total_keystrokes, "user had to type", self.user_keystrokes)
                 print("User had to make", 100 * self.user_keystrokes / self.total_keystrokes, "percent of the keystrokes.")
 
-        print("\nInformation:")
-        print("Total keystrokes in text", self.total_keystrokes, "user had to type", self.user_keystrokes)
+        print("\nFinal information, based on entire test file:")
+        print("Total keystrokes in text overall", self.total_keystrokes, "user had to type", self.user_keystrokes)
         print("User had to make", 100 * self.user_keystrokes / self.total_keystrokes, "percent of the keystrokes.")
         self.words = [] # Reset
 
@@ -494,11 +485,10 @@ def main():
     """
     parser = argparse.ArgumentParser(description='Word Predictor')
     parser.add_argument('--file', '-f', type=str,  required=True, help='file with language model')
-    parser.add_argument('--testfile', '-tf', type=str, required=False, help='test file to run stats on (how many keystrokes were saved)')
 
     arguments = parser.parse_args()
 
-    word_predictor = WordPredictor(arguments.file, arguments.testfile)
+    word_predictor = WordPredictor(arguments.file)
 
 if __name__ == "__main__":
     main()
