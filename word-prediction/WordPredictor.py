@@ -469,12 +469,12 @@ class WordPredictor:
                     break
 
             if n%100 == 0:
-                print("\nStats generated on", n, "number of words from the test file")
-                print("Total keystrokes in text thus far", self.total_keystrokes, "user had to type", self.user_keystrokes)
+                print("\nStats generated on", n, "words from the test file")
+                print("Total keystrokes in test file thus far", self.total_keystrokes, "user had to type", self.user_keystrokes)
                 print("User had to make", 100 * self.user_keystrokes / self.total_keystrokes, "percent of the keystrokes.")
 
         print("\nFinal information, based on entire test file:")
-        print("Total keystrokes in text overall", self.total_keystrokes, "user had to type", self.user_keystrokes)
+        print("Total words in test file", n, "- Total keystrokes in test file", self.total_keystrokes, "user had to type", self.user_keystrokes)
         print("User had to make", 100 * self.user_keystrokes / self.total_keystrokes, "percent of the keystrokes.")
         self.words = [] # Reset
 
