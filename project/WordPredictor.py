@@ -37,7 +37,7 @@ class WordPredictor:
         self.words = []
 
         # Number of words to recommend to the user. Keep this number reasonable, <10.
-        self.num_words_to_recommend = 10 # Also called the prediction window size.
+        self.num_words_to_recommend = 3 # Also called the prediction window size.
 
         if not self.read_model(filename):
             # If unable to read model (file missing?).
