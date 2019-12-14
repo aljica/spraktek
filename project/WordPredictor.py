@@ -9,7 +9,7 @@ class WordPredictor:
     """
     This class predicts words using a language model.
     """
-    def __init__(self, filename):
+    def __init__(self, filename, stats_file = None):
 
         # The mapping from words to identifiers.
         self.index = {}
@@ -43,6 +43,9 @@ class WordPredictor:
             # If unable to read model (file missing?).
             print("Unable to read model, was the filepath correctly specified?")
             sys.exit()
+
+        if stats_file:
+            self.stats(stats_file)
 
         self.welcome()
 
@@ -84,17 +87,14 @@ class WordPredictor:
         print("Welcome to the Word Prediction Program.")
         user_input = ""
         while user_input != "quit":
-            print("\nPlease enter 'stats' to check how many keystrokes you would save if you were to type out the contents of a test file.")
             print("Please enter 'type' to type freely and see a list of recommended words with each keystroke you make.")
             print("Enter 'quit' to quit.")
             user_input = input("Your choice: ")
-            if user_input == "stats":
-                self.run_stats()
-            elif user_input == "type":
+            if user_input == "type":
                 self.run_type()
             else:
                 if user_input != "quit":
-                    print("\nPlease input 'stats' or 'type' (without the quotation marks).")
+                    print("\nPlease input 'type' to type words or 'quit' (without the quotation marks).")
 
     def run_type(self):
         while True:
@@ -102,12 +102,6 @@ class WordPredictor:
                 print("\nExiting type.")
                 break
         self.words = [] # Reset
-
-    def run_stats(self):
-        filepath = ""
-        while filepath != "quit":
-            filepath = input("\nInput a filepath to a text file to run stats (or type quit): ")
-            self.stats(filepath)
 
     def print_console(self, words, new_word):
         """
@@ -433,10 +427,11 @@ def main():
     """
     parser = argparse.ArgumentParser(description='Word Predictor')
     parser.add_argument('--file', '-f', type=str,  required=True, help='file with language model')
+    parser.add_argument('--stats', '-s', type=str, required=False, help='input a test file to run statistics on (how many keystrokes you would have saved)')
 
     arguments = parser.parse_args()
 
-    word_predictor = WordPredictor(arguments.file)
+    word_predictor = WordPredictor(arguments.file, arguments.stats)
 
 if __name__ == "__main__":
     main()
