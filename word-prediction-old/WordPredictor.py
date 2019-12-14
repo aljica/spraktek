@@ -75,7 +75,7 @@ class WordPredictor:
             if (self.type()):
                 print("\nExiting type.")
                 break
-	self.words = [] # Reset
+        self.words = [] # Reset
 
     def run_stats(self):
         filepath = ""
