@@ -299,7 +299,7 @@ class WordPredictor:
                     break
 
                 self.words.append(new_word)
-                self.unigram_count += 1
+                self.unigram_count[new_word] += 1
                 break
 
             new_word += letter
