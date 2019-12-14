@@ -222,7 +222,13 @@ class WordPredictor:
             possible_trigrams = self.get_n_grams(str(self.words[len(self.words) - 1]), str(self.words[len(self.words) - 2])) # Get trigram probabilities.
             possible_bigrams = self.get_n_grams(str(self.words[len(self.words) - 1])) # Get bigram probabilities.
 
+        update_possible_words = False
         while letter != " ":
+            if update_possible_words:
+                # Get words to recommend
+                # Make sure flag var is False if we "continue" from letter == " " or some other pointless input.
+
+
             self.print_console(self.words, new_word)
             recommended_words = self.rec_words(new_word)
 
