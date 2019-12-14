@@ -268,7 +268,9 @@ class WordPredictor:
                     continue
                 if len(words_to_recommend) == 0:
                     # Then, we know user either misspelled the word or wishes to add a new one we haven't heard of before.
-                    pass
+                    if new_word.isalpha():
+                        # Only try to correct spelling if the word user is typing does not contain a non-alphabetic character.
+                        words_to_recommend = self.spell_check(new_word)
 
             for i in range(len(words_to_recommend)):
                 print(i+1, "-", words_to_recommend[i])
@@ -361,32 +363,61 @@ class WordPredictor:
                 continue
 
             n += 1
-            if n%1000 == 0:
+            if n%100 == 0:
                 print("\nStats generated on", n, "words from the test file")
                 print("Total keystrokes in test file thus far", self.total_keystrokes, "user had to type", self.user_keystrokes)
                 print("User had to make", 100 * self.user_keystrokes / self.total_keystrokes, "percent of the keystrokes.")
 
             self.total_keystrokes += len(token) + 1 # Add the number of keystrokes required to type out the word. Plus 1 for the space before the next token.
             user_input = ""
-            recommended_words = self.rec_words(user_input)
-            if token in recommended_words:
-                self.user_keystrokes += 1 # Add 1 keystroke as user selects the recommendation.
-                self.words.append(token)
-                continue
 
-            # Now, for each letter that has to be typed:
+            if len(self.words) == 0:
+                # If the user hasn't written any words yet.
+                possible_words = self.recommend_words(prev_word = ".") # Get start-of-sentence probabilities (bigrams).
+            elif len(self.words) == 1:
+                possible_words = self.recommend_words(prev_word = str(self.words[len(self.words) - 1])) # Get bigram probabilities.
+            else:
+                possible_words = self.recommend_words(prev_word = str(self.words[len(self.words) - 1]), two_words_back = str(self.words[len(self.words) - 2])) # Get trigram probabilities.
+                possible_words += self.recommend_words(prev_word = str(self.words[len(self.words) - 1]))
+
+            if token in possible_words:
+                token_recommendation_rank = possible_words.index(token) + 1 # If rank would be recommended first or second etc (depending on probability).
+                if token_recommendation_rank <= self.num_words_to_recommend:
+                    # Then we can choose the word right away.
+                    self.user_keystrokes += 1 # User keystroke for choosing the recommendation.
+                    self.unigram_count[token] += 1 # Update unigram count.
+                    self.words.append(token)
+                    continue
+            else:
+                possible_words += self.recommend_words() # Add all unigrams.
+                if token in possible_words:
+                    token_recommendation_rank = possible_words.index(token) + 1 # If rank would be recommended first or second etc (depending on probability).
+                    if token_recommendation_rank <= self.num_words_to_recommend:
+                        # Then we can choose the word right away.
+                        self.user_keystrokes += 1 # User keystroke for choosing the recommendation.
+                        self.unigram_count[token] += 1
+                        self.words.append(token)
+                        continue
+                else:
+                    # Then, the token being typed is a word not in our vocabulary, i.e. we have not seen it before. User has to type the whole thing out!
+                    # Here, we should use the spell_check algorithm, but decided not to in order to make the code more effective!
+                    self.user_keystrokes += len(token) + 1 # To type out the word and add a space (+1).
+                    # Add the word to our vocabulary.
+                    self.index[token] = len(self.index)
+                    self.word[len(self.index)] = token
+                    self.unigram_count[token] = 1
+                    self.words.append(token)
+                    continue
+
             for letter in token:
                 user_input += letter
-                self.user_keystrokes += 1 # Increment number of keystrokes user has had to make.
+                self.user_keystrokes += 1
 
-                if user_input == token:
-                    self.user_keystrokes += 1 # Add 1 for the space user would have to add.
-                    self.words.append(token)
-                    break
+                possible_words = self.recommend_words(user_input = user_input, possible_words = possible_words) # Update possible words based on user_input.
 
-                recommended_words = self.rec_words(user_input)
-                if token in recommended_words:
-                    self.user_keystrokes += 1 # Add 1 keystroke as user selects the recommendation.
+                token_recommendation_rank = possible_words.index(token) + 1
+                if token_recommendation_rank <= self.num_words_to_recommend:
+                    self.user_keystrokes += 1 # For choosing the recommendation.
                     self.words.append(token)
                     break
 
