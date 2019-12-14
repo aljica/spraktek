@@ -328,6 +328,9 @@ class WordPredictor:
             return
 
         print("Number of words/tokens in test file", len(self.tokens))
+        for token in self.tokens:
+            self.total_keystrokes += len(token) + 1
+        print("Number of total keystrokes: ", self.total_keystrokes)
         n = 0 # Number of analyzed tokens from test file thus far.
         for token in self.tokens:
             if token == "" or token == " ":
