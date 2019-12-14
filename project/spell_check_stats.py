@@ -2,7 +2,7 @@ from operator import itemgetter
 
 unigram_count = {}
 
-with open("/home/aljica/Desktop/guardian_model.txt", "r") as f:
+with open("model.txt", "r") as f:
     t = f.readline().strip().split()
     unique_words = int(t[0])
     total_words = int(t[1])
@@ -33,7 +33,7 @@ total_misspelled_words = 0 # Total number of misspelled words (defined as all mi
 correct_corrections = 0 # The number of correct suggestions that were made.
 window_size = 3 # Prediction window size.
 
-with open("/home/aljica/Desktop/spraktek/project/stats/missp.dat", "r") as f:
+with open("missp.dat", "r") as f:
     expected_word = None
     misspelled_word = None
     i=0
