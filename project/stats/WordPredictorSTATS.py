@@ -306,29 +306,6 @@ class WordPredictor:
 
             possible_words = self.recommend_words(user_input = new_word, possible_words = possible_words)
 
-                # If there are no recommended words, check if user has misspelled the word.
-                # BUT, if there is a non-alphabetic character in new_word, then do NOT check spelling.
-                # This is because if the user has written "$1" and it doesn't exist in the vocabulary,
-                # then the system might end up recommending any two-letter word "to", "am", ... etc.
-                #check_spell = True
-                #for c in new_word:
-                #    if not c.isalpha():
-                #        check_spell = False
-                #        break
-                #if check_spell:
-                #    recommended_words = self.spell_check(new_word)
-
-            #if letter == " ":
-
-            #    if new_word not in self.index:
-                    # If the word user typed does not exist in our vocabulary.
-            #        self.index[new_word] = len(self.index)
-            #        self.word[len(self.index)] = new_word
-            #        self.unigram_count[new_word] = 1
-
-            #    self.words.append(new_word)
-            #    self.unigram_count[new_word] += 1 # Update unigram count (keeps track of how frequently user uses this word).
-
         return False
 
 
