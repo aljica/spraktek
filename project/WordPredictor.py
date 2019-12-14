@@ -37,7 +37,7 @@ class WordPredictor:
         self.words = []
 
         # Number of words to recommend to the user. Keep this number reasonable, <10.
-        self.num_words_to_recommend = 3
+        self.num_words_to_recommend = 10
 
         if not self.read_model(filename):
             # If unable to read model (file missing?).
@@ -46,6 +46,7 @@ class WordPredictor:
 
         if stats_file:
             self.stats(stats_file)
+            sys.exit()
 
         self.welcome()
 
