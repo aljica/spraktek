@@ -5,13 +5,6 @@ from operator import itemgetter
 import nltk
 import sys
 
-"""
-This file is part of the computer assignments for the course DD1418/DD2418 Language engineering at KTH.
-Created 2018 by Johan Boye and Patrik Jonell.
-
-Modified December 2019 by Almir Aljic & Alexander Jakobsen.
-"""
-
 class WordPredictor:
     """
     This class predicts words using a language model.
@@ -43,23 +36,13 @@ class WordPredictor:
         # User-inputted words.
         self.words = []
 
-        # Possible words to appear in trigram and bigram context
-        #self.trigram_words = []
-        #self.b_words = []
-        #self.unigram_words = []
-
         # Number of words to recommend to the user. Keep this number reasonable, <10.
         self.num_words_to_recommend = 3
 
-        #self.words.append("How")
-        #self.words.append("are")
-
         if not self.read_model(filename):
-            # If unable to read model (file missing).
+            # If unable to read model (file missing?).
             print("Unable to read model, was the filepath correctly specified?")
             sys.exit()
-
-        #self.test()
 
         self.welcome()
 
@@ -153,178 +136,6 @@ class WordPredictor:
         all_words += new_word + "_"
         print(all_words)
 
-    def get_subsequent_bigram_words(self):
-        """
-        Fetches all possible subsequent words that are found as part of
-        a bigram from the language model.
-        """
-        # Special case scenario, if self.words equals 0. If we didn't have this special case handler,
-        # then we would get no bigram_words at all in recommended_words. Instead, we would just get the words
-        # that are most commonly used, as stand-alone (unigram) words, such as lower-case 'the', '.' etc.
-        # What we want is to get the most common start-of-sentence words, which is what this handler is for!
-        if len(self.words) == 0:
-            prev_word = "."
-            w = self.bigram_prob.get(prev_word, "empty")
-            if w != "empty":
-                words = list(w)
-                p = list(w.values())
-                return words, p
-
-        if len(self.words) > 0:
-            prev_word = self.words[len(self.words) - 1]
-            w = self.bigram_prob.get(prev_word, "empty")
-            if w != "empty":
-                words = list(w)
-                p = list(w.values())
-                return words, p
-
-        return [], []
-
-    def get_subsequent_trigram_words(self):
-        """
-        Fetches all possible subsequent words as part of a trigram, given by
-        the language model.
-        """
-
-        if len(self.words) > 1:
-            sub_two_word = self.words[len(self.words) - 2]
-            prev_word = self.words[len(self.words) - 1]
-            w = self.trigram_prob.get(sub_two_word, "empty")
-            if w != "empty":
-                w = w.get(prev_word, "empty")
-                if w != "empty":
-                    words = list(w)
-                    p = list(w.values())
-                    return words, p
-
-        return [], []
-
-    def top_n_gram_words(self, user_input, n_gram):
-        """
-        Determines int(self.num_words_to_recommend) words that are most likely to appear after a given
-        n-gram, depending on user input. All possible words that can follow
-        the n-gram is given by subsequent_words, which are taken from
-        self.trigram_prob or self.bigram_prob depending on the n-gram.
-
-        The number n is based on self.num_words_to_recommend, and is given in
-        the constructor of this class.
-        """
-        if n_gram == 3:
-            words, p = self.get_subsequent_trigram_words()
-        elif n_gram == 2:
-            words, p = self.get_subsequent_bigram_words()
-        else:
-            return []
-
-        if len(words) == 0 and len(p) == 0:
-            return []
-
-        if user_input != "":
-            words_user_input = []
-            p_user_input = []
-            for i in range(len(words)):
-                word = words[i]
-                if len(user_input) <= len(word):
-                    test_word = word[0:len(user_input)]
-                    if user_input == test_word:
-                        words_user_input.append(word)
-                        p_user_input.append(p[i])
-
-            words = words_user_input
-            p = p_user_input
-            if len(words) == 0 and len(p) == 0:
-                return []
-
-        recommended_words = []
-        for i in range(self.num_words_to_recommend):
-            m = max(p)
-            indices_of_max_p = [i for i, j in enumerate(p) if j == m]
-
-            if len(indices_of_max_p) > 1:
-                chosen_word = words[indices_of_max_p[0]] # Choose first word
-                chosen_word_count = self.unigram_count[chosen_word]
-                for j in range(1, len(indices_of_max_p)):
-                    word = words[indices_of_max_p[j]]
-                    count = self.unigram_count[word]
-
-                    if count > chosen_word_count:
-                        chosen_word_count = count
-                        chosen_word = word
-                recommended_words.append(chosen_word)
-            else:
-                recommended_words.append(words[indices_of_max_p[0]])
-
-            word_just_added = recommended_words[i]
-            idx = words.index(word_just_added)
-            words.pop(idx)
-            p.pop(idx)
-            if len(words) == 0 and len(p) == 0:
-                break
-
-        return recommended_words
-
-    def top_unigram_words(self, user_input):
-        """
-        Determines int(self.num_words_to_recommend) words that have the highest frequency of occurrence.
-        """
-        words = []
-        counts = []
-        for w in self.index:
-            if len(user_input) <= len(w):
-                test_word = w[0:len(user_input)]
-                if user_input == test_word:
-                    words.append(w)
-                    counts.append(self.unigram_count[w])
-
-        if len(words) == 0 and len(counts) == 0:
-            return []
-
-        words_to_return = []
-        for i in range(self.num_words_to_recommend):
-            index_of_word_with_max_count = counts.index(max(counts))
-            word = words[index_of_word_with_max_count]
-            words_to_return.append(word)
-
-            idx_to_remove = words.index(word)
-            words.pop(idx_to_remove)
-            counts.pop(idx_to_remove)
-
-            if len(words) == 0 and len(counts) == 0:
-                break
-
-        return words_to_return
-
-    def rec_words(self, user_input):
-        """
-        Checks for trigram and bigram probabilities. If none are found,
-        a search of highest unigram count is returned.
-        Returns a list of words to recommend (size of list is determined by
-        self.num_words_to_recommend)
-        """
-        recommended_words = []
-
-        trigrams = self.top_n_gram_words(user_input, 3) # Most probable words to appear in the context of the given trigram, given a user input.
-        recommended_words += [trigrams[x] for x in range(len(trigrams))]
-        if len(recommended_words) < 3:
-            bigrams = self.top_n_gram_words(user_input, 2)
-            recommended_words += [bigrams[x] for x in range(len(bigrams))]
-            if len(recommended_words) < 3:
-                unigrams = self.top_unigram_words(user_input)
-                recommended_words += [unigrams[x] for x in range(len(unigrams))]
-
-        words_to_recommend = []
-        for word in recommended_words:
-            if word in words_to_recommend:
-                continue
-            else:
-                words_to_recommend.append(word)
-
-        if len(words_to_recommend) >= self.num_words_to_recommend:
-            return words_to_recommend[0:self.num_words_to_recommend]
-
-        return words_to_recommend
-
-
     def edits1(self, word):
         """
         All edits that are one edit away from the given word.
@@ -371,30 +182,23 @@ class WordPredictor:
 
 
 
-    def get_trigram_probs(self):
-        if len(self.words) < 2:
-            return []
-        two_words_back = self.words[len(self.words) - 2]
-        prev_word = self.words[len(self.words) - 1]
-
-        w = self.trigram_prob.get(two_words_back, "empty")
-        if w != "empty":
-            w = w.get(prev_word, "empty")
+    def get_n_grams(self, prev_word = None, two_words_back = None):
+        """
+        Returns either bigram probabilities given historical word prev_word or
+        trigram probabilities given historical words two_words_back & prev_word.
+        """
+        if two_words_back:
+            w = self.trigram_prob.get(two_words_back, "empty")
+            if w != "empty":
+                w = w.get(prev_word, "empty")
+                if w != "empty":
+                    words_and_p = [(w, p) for w, p in w.items()]
+                    return words_and_p.sort(key=itemgetter(1), reverse=True) # Sorted from highest to lowest probability.
+        else:
+            w = self.bigram_prob.get(prev_word, "empty")
             if w != "empty":
                 words_and_p = [(w, p) for w, p in w.items()]
                 return words_and_p.sort(key=itemgetter(1), reverse=True) # Sorted from highest to lowest probability.
-
-        return []
-
-    def get_bigram_probs(self):
-        if len(self.words) < 1:
-            return []
-        prev_word = self.words[len(self.words) - 1]
-
-        w = self.bigram_prob.get(prev_word, "empty")
-        if w != "empty":
-            words_and_p = [(w, p) for w, p in w.items()]
-            return words_and_p.sort(key=itemgetter(1), reverse=True) # Sorted from highest to lowest probability.
 
         return []
 
@@ -405,10 +209,16 @@ class WordPredictor:
         letter = ""
         new_word = ""
 
-        trigrams = self.get_trigram_probs()
+        if len(self.words) == 0:
+            # If user has written no words yet.
+            possible_words = self.get_n_grams(prev_word = ".") # Get start-of-sentence probabilities (bigrams).
+        elif len(self.words) == 1:
+            possible_words = self.get_n_grams(str(self.words[len(self.words) - 1])) # Get bigram probabilities.
+        else:
+            possible_words = self.get_n_grams(str(self.words[len(self.words) - 1]), str(self.words[len(self.words) - 2])) # Get trigram probabilities.
+            possible_words = self.get_n_grams(str(self.words[len(self.words) - 1])) # Get bigram probabilities.
 
         while letter != " ":
-
             self.print_console(self.words, new_word)
             recommended_words = self.rec_words(new_word)
 
