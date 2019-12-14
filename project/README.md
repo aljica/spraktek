@@ -86,4 +86,4 @@ python3 spell_check_stats.py
 Make sure that model.txt and missp.dat are in the same directory as spell_check_stats.py!
 
 The program will now, for each misspelled word, try to correct it by running the algorithm and
-checking if any of the words exist in the vocabulary.
+checking if any of the words exist in the vocabulary. A prediction window size of 3 is used.
