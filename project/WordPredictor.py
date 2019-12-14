@@ -193,12 +193,14 @@ class WordPredictor:
                 w = w.get(prev_word, "empty")
                 if w != "empty":
                     words_and_p = [(w, p) for w, p in w.items()]
-                    return words_and_p.sort(key=itemgetter(1), reverse=True) # Sorted from highest to lowest probability.
+                    words_and_p.sort(key=itemgetter(1), reverse=True) # Sorted from highest to lowest probability.
+                    return words_and_p
         else:
             w = self.bigram_prob.get(prev_word, "empty")
             if w != "empty":
                 words_and_p = [(w, p) for w, p in w.items()]
-                return words_and_p.sort(key=itemgetter(1), reverse=True) # Sorted from highest to lowest probability.
+                words_and_p.sort(key=itemgetter(1), reverse=True) # Sorted from highest to lowest probability.
+                return words_and_p
 
         return []
 
@@ -210,13 +212,15 @@ class WordPredictor:
         new_word = ""
 
         if len(self.words) == 0:
-            # If user has written no words yet.
-            possible_words = self.get_n_grams(prev_word = ".") # Get start-of-sentence probabilities (bigrams).
+            # If the user hasn't written any words yet.
+            possible_trigrams = None
+            possible_bigrams = self.get_n_grams(prev_word = ".") # Get start-of-sentence probabilities (bigrams).
         elif len(self.words) == 1:
-            possible_words = self.get_n_grams(str(self.words[len(self.words) - 1])) # Get bigram probabilities.
+            possible_trigrams = None
+            possible_bigrams = self.get_n_grams(str(self.words[len(self.words) - 1])) # Get bigram probabilities.
         else:
-            possible_words = self.get_n_grams(str(self.words[len(self.words) - 1]), str(self.words[len(self.words) - 2])) # Get trigram probabilities.
-            possible_words = self.get_n_grams(str(self.words[len(self.words) - 1])) # Get bigram probabilities.
+            possible_trigrams = self.get_n_grams(str(self.words[len(self.words) - 1]), str(self.words[len(self.words) - 2])) # Get trigram probabilities.
+            possible_bigrams = self.get_n_grams(str(self.words[len(self.words) - 1])) # Get bigram probabilities.
 
         while letter != " ":
             self.print_console(self.words, new_word)
