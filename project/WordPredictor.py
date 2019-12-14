@@ -46,18 +46,6 @@ class WordPredictor:
 
         self.welcome()
 
-    def test(self):
-        w = self.trigram_prob.get(self.words[0], "empty")
-        if w != "empty":
-            w = w.get(self.words[1], "empty")
-            if w != "empty":
-                words_and_p = [(w, p) for w, p in w.items()]
-
-        print(words_and_p)
-        print("Sorting")
-        words_and_p.sort(key=itemgetter(1), reverse=True)
-        print(words_and_p)
-
     def read_model(self,filename):
         """
         Reads the contents of the language model file into the appropriate data structures.
@@ -182,27 +170,60 @@ class WordPredictor:
 
 
 
-    def get_n_grams(self, prev_word = None, two_words_back = None):
+    def get_n_grams(self, prev_word = None, two_words_back = None, user_input = ""):
         """
         Returns either bigram probabilities given historical word prev_word or
         trigram probabilities given historical words two_words_back & prev_word.
+        If no historical words are specified, then unigram counts are returned.
+
+        Based on user_input for current word being inputted.
         """
-        if two_words_back:
+        if prev_word and two_words_back:
             w = self.trigram_prob.get(two_words_back, "empty")
             if w != "empty":
                 w = w.get(prev_word, "empty")
                 if w != "empty":
                     words_and_p = [(w, p) for w, p in w.items()]
                     words_and_p.sort(key=itemgetter(1), reverse=True) # Sorted from highest to lowest probability.
-                    return words_and_p
-        else:
+                    possible_words = [w for (w, p) in words_and_p if w[:len(user_input)] == user_input] # Only the words that start with user_input.
+                    return possible_words
+        elif prev_word and not two_words_back:
             w = self.bigram_prob.get(prev_word, "empty")
             if w != "empty":
                 words_and_p = [(w, p) for w, p in w.items()]
                 words_and_p.sort(key=itemgetter(1), reverse=True) # Sorted from highest to lowest probability.
-                return words_and_p
+                possible_words = [w for (w, p) in words_and_p if w[:len(user_input)] == user_input] # Only the words that start with user_input.
+                return possible_words
+        else:
+            words_and_p = [(w, p) for w, p in self.unigram_count.items()]
+            words_and_p.sort(key=itemgetter(1), reverse=True) # Sorted from highest to lowest probability.
+            possible_words = [w for (w, p) in words_and_p if w[:len(user_input)] == user_input] # Only the words that start with user_input.
+            return possible_words
 
         return []
+
+    def recommend_words(self, prev_word = None, two_words_back = None, user_input = "", possible_words = None):
+        """
+        Recommends possible words using self.get_n_grams().
+
+        If user specifies possible_words as param, then the list is filtered to remove words that don't start with user_input.
+        """
+        if possible_words:
+            return [w for w in possible_words if w[:len(user_input)] == user_input]
+        return self.get_n_grams(prev_word, two_words_back, user_input)
+
+    def type_letter(self, possible_choices):
+        """
+        Prompts user for letter inputs.
+
+        :param possible_choices is a list of ["1-", "2-", ...] all recommended words user can choose.
+        """
+        while True:
+            letter = input("Enter a character (or choose a recommended word): ")
+            if len(letter) == 1 or letter in ["quit", "reset", " "] + possible_choices:
+                return letter
+            print("\nPlease input a character. You can also type 'quit' to quit the program, 'reset' to reset the word or input a blank space to finish typing your word.")
+        pass
 
     def type_word(self):
         """
@@ -211,85 +232,105 @@ class WordPredictor:
         letter = ""
         new_word = ""
 
+        check_unigram = True # Flag variable to check unigrams if possible_words is empty.
+
         if len(self.words) == 0:
             # If the user hasn't written any words yet.
-            possible_trigrams = None
-            possible_bigrams = self.get_n_grams(prev_word = ".") # Get start-of-sentence probabilities (bigrams).
+            possible_words = self.recommend_words(prev_word = ".") # Get start-of-sentence probabilities (bigrams).
         elif len(self.words) == 1:
-            possible_trigrams = None
-            possible_bigrams = self.get_n_grams(str(self.words[len(self.words) - 1])) # Get bigram probabilities.
+            possible_words = self.recommend_words(prev_word = str(self.words[len(self.words) - 1])) # Get bigram probabilities.
         else:
-            possible_trigrams = self.get_n_grams(str(self.words[len(self.words) - 1]), str(self.words[len(self.words) - 2])) # Get trigram probabilities.
-            possible_bigrams = self.get_n_grams(str(self.words[len(self.words) - 1])) # Get bigram probabilities.
+            possible_words = self.recommend_words(prev_word = str(self.words[len(self.words) - 1]), two_words_back = str(self.words[len(self.words) - 2])) # Get trigram probabilities.
+            possible_words += self.recommend_words(prev_word = str(self.words[len(self.words) - 1]))
 
-        update_possible_words = False
         while letter != " ":
-            if update_possible_words:
-                # Get words to recommend
-                # Make sure flag var is False if we "continue" from letter == " " or some other pointless input.
-
-
             self.print_console(self.words, new_word)
-            recommended_words = self.rec_words(new_word)
+            #words_to_recommend = possible_words[:self.num_words_to_recommend]
+            words_to_recommend = []
+            i = 0
+            while len(words_to_recommend) < self.num_words_to_recommend and len(possible_words) != 0:
+                # This is to ensure we always have 3 *distinct* words that are being recommended.
+                try:
+                    word = possible_words[i]
+                    if word in words_to_recommend:
+                        i += 1
+                        continue
+                    else:
+                        words_to_recommend.append(word)
+                except IndexError:
+                    break
 
-            if len(recommended_words) == 0:
+            if len(words_to_recommend) < self.num_words_to_recommend:
+                if check_unigram:
+                    # If there are no recommended bigrams, check unigrams.
+                    possible_words += self.recommend_words(user_input = new_word)
+                    check_unigram = False
+                    continue
+                if len(words_to_recommend) == 0:
+                    # Then, we know user either misspelled the word or wishes to add a new one we haven't heard of before.
+                    pass
+
+            for i in range(len(words_to_recommend)):
+                print(i+1, "-", words_to_recommend[i])
+
+            possible_choices = [(str(i) + "-") for i in range(1, len(words_to_recommend) + 1)]
+            letter = self.type_letter(possible_choices)
+
+            if letter in possible_choices:
+                number_of_word = possible_choices.index(letter)
+                chosen_word = words_to_recommend[number_of_word]
+                self.unigram_count[chosen_word] += 1
+                self.words.append(chosen_word)
+                break
+
+            if letter == "quit":
+                return True
+
+            if letter == "reset":
+                break
+
+            if letter == " ":
+                if new_word == "":
+                    break
+
+                # Add new words. Also update their unigram count.
+                if new_word not in self.index:
+                    self.index[new_word] = len(self.index)
+                    self.word[len(self.index)] = new_word
+                    self.unigram_count[new_word] = 1
+                    self.words.append(new_word)
+                    break
+
+                self.words.append(new_word)
+                self.unigram_count += 1
+                break
+
+            new_word += letter
+
+            possible_words = self.recommend_words(user_input = new_word, possible_words = possible_words)
+
                 # If there are no recommended words, check if user has misspelled the word.
                 # BUT, if there is a non-alphabetic character in new_word, then do NOT check spelling.
                 # This is because if the user has written "$1" and it doesn't exist in the vocabulary,
                 # then the system might end up recommending any two-letter word "to", "am", ... etc.
-                check_spell = True
-                for c in new_word:
-                    if not c.isalpha():
-                        check_spell = False
-                        break
-                if check_spell:
-                    recommended_words = self.spell_check(new_word)
+                #check_spell = True
+                #for c in new_word:
+                #    if not c.isalpha():
+                #        check_spell = False
+                #        break
+                #if check_spell:
+                #    recommended_words = self.spell_check(new_word)
 
-            for i in range(len(recommended_words)):
-                print(i+1, "-", recommended_words[i])
+            #if letter == " ":
 
-            possible_choices = [(str(x) + "-") for x in range(1, len(recommended_words) + 1)]
-
-            letter = input("Enter your letter (or choice): ")
-
-            # Here we allow the user to choose one of the words from the list of recommended words.
-            if letter in possible_choices:
-                number_of_word = possible_choices.index(letter)
-                chosen_word = recommended_words[number_of_word]
-                self.words.append(chosen_word)
-                self.unigram_count[chosen_word] += 1 # Update unigram count.
-                break
-
-            # Handle cases for basic functionality.
-            if letter == "quit":
-                return True
-
-            if letter == "re-":
-                # Wipes the current letters user has typed for an uncompleted word.
-                break
-
-            if len(letter) > 1:
-                print("\n###---Please enter one letter at a time!!---###\n")
-                continue
-
-            if letter == "":
-                continue
-
-            if letter == " ":
-                # Here we have to determine when to add a new word.
-                if new_word == "":
-                    break
-
-                if new_word not in self.index:
+            #    if new_word not in self.index:
                     # If the word user typed does not exist in our vocabulary.
-                    self.index[new_word] = len(self.index)
-                    self.word[len(self.index)] = new_word
-                    self.unigram_count[new_word] = 1
+            #        self.index[new_word] = len(self.index)
+            #        self.word[len(self.index)] = new_word
+            #        self.unigram_count[new_word] = 1
 
-                self.words.append(new_word)
-                self.unigram_count[new_word] += 1 # Update unigram count (keeps track of how frequently user uses this word).
-
-            new_word += letter
+            #    self.words.append(new_word)
+            #    self.unigram_count[new_word] += 1 # Update unigram count (keeps track of how frequently user uses this word).
 
         return False
 
