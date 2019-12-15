@@ -40,9 +40,9 @@ with open("missp.dat", "r") as f:
     for line in f:
         i+=1
         if i%1000 == 0:
-            print(i)
-            print(total_misspelled_words)
-            print(correct_corrections)
+            print("lines processed thus far", i)
+            print("misspelled words thus far", total_misspelled_words)
+            print("correct corrections thus far", correct_corrections)
         line = line.strip()
         if line[0] == "$":
             expected_word = line[1:]
