@@ -39,8 +39,8 @@ with open("missp.dat", "r") as f:
     i=0
     for line in f:
         i+=1
-        if i%1000 == 0:
-            print("lines processed thus far", i)
+        if i%10 == 0:
+            print("\nlines processed thus far", i)
             print("misspelled words thus far", total_misspelled_words)
             print("correct corrections thus far", correct_corrections)
         line = line.strip()
