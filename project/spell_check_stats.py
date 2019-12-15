@@ -49,7 +49,6 @@ with open("missp.dat", "r") as f:
             continue
         misspelled_word = line[:]
         total_misspelled_words += 1
-        continue
 
         perm = edits2(misspelled_word) # permutations
         s = known(perm)
